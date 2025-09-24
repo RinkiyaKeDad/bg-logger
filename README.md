@@ -1,0 +1,4 @@
+- `psql -U admin -d wingstats`
+- `\dt` -> Show Tables
+- `\d players` -> Describe players
+- `SELECT * from players;` -> works for both DBs
