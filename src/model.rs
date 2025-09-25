@@ -7,5 +7,14 @@ pub struct GameModel {
     pub id: Uuid,
     pub name: String,
     pub creator_name: String,
-    pub created_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+/// Database model for a player
+#[derive(Debug, Deserialize, Serialize, sqlx::FromRow)]
+pub struct PlayerModel {
+    pub id: Uuid,
+    pub name: String,
+    pub is_owner: bool,
+    pub created_at: chrono::DateTime<chrono::Utc>,
 }

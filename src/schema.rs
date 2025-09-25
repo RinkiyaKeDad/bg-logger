@@ -13,3 +13,9 @@ pub struct UpdateGameSchema {
     pub name: Option<String>,
     pub creator_name: Option<String>,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PlayerSchema {
+    pub name: String,
+    pub is_owner: Option<bool>,
+}

@@ -207,7 +207,7 @@ pub async fn update_game_handler(
     let response = json!({
         "status": "success",
         "data": json!({
-            "player": updated_game
+            "game": updated_game
         })
     });
     Ok(Json(response))
