@@ -8,9 +8,10 @@ use axum::{
 use crate::{
     AppState,
     handlers::{
-        create_game_handler, create_player_handler, delete_game_handler, delete_player_handler,
-        game_list_handler, get_game_handler, get_player_handler, player_list_handler,
-        update_game_handler, update_player_handler,
+        create_game_handler, create_play_handler, create_player_handler, delete_game_handler,
+        delete_play_handler, delete_player_handler, game_list_handler, get_game_handler,
+        get_play_handler, get_player_handler, play_list_handler, player_list_handler,
+        update_game_handler, update_play_handler, update_player_handler,
     },
 };
 
@@ -33,6 +34,15 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
             get(get_player_handler)
                 .delete(delete_player_handler)
                 .patch(update_player_handler),
+        )
+        // Play routes
+        .route("/api/plays", post(create_play_handler))
+        .route("/api/plays", get(play_list_handler))
+        .route(
+            "/api/plays/{id}",
+            get(get_play_handler)
+                .delete(delete_play_handler)
+                .patch(update_play_handler),
         )
         .with_state(app_state)
 }

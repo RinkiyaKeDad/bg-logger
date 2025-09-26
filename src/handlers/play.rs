@@ -10,59 +10,42 @@ use uuid::Uuid;
 
 use serde_json::json;
 
-use crate::{AppState, model::PlayerModel, schema::PlayerSchema};
+use crate::{AppState, model::PlayModel, schema::PlaySchema};
 
-pub async fn create_player_handler(
+pub async fn create_play_handler(
     State(data): State<Arc<AppState>>,
-    Json(body): Json<PlayerSchema>,
+    Json(body): Json<PlaySchema>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let player = sqlx::query_as!(
-        PlayerModel,
-        r#"INSERT INTO players (name, is_owner) VALUES ($1, $2) RETURNING *"#,
-        &body.name,
-        &body.is_owner.unwrap_or(false),
+    let play = sqlx::query_as!(
+        PlayModel,
+        r#"INSERT INTO plays (game_id) VALUES ($1) RETURNING *"#,
+        &body.game_id,
     )
     .fetch_one(&data.db)
     .await
     .map_err(|e| e.to_string());
 
-    if let Err(err) = player {
-        if err.contains("duplicate key value") {
-            if err.contains("uniq_single_owner") {
-                let error_response = serde_json::json!({
-                    "status": "error",
-                    "message": "Only one owner is allowed",
-                });
-                return Err((StatusCode::CONFLICT, Json(error_response)));
-            } else {
-                let error_response = serde_json::json!({
-                    "status": "error",
-                    "message": "Player name already exists",
-                });
-                return Err((StatusCode::CONFLICT, Json(error_response)));
-            }
-        }
-
+    if let Err(err) = play {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({"status": "error","message": format!("{:?}", err)})),
         ));
     }
 
-    let player_response = json!({
+    let play_response = json!({
             "status": "success",
             "data": json!({
-                "player": player
+                "play": play
         })
     });
 
-    Ok(Json(player_response))
+    Ok(Json(play_response))
 }
 
-pub async fn player_list_handler(
+pub async fn play_list_handler(
     State(data): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let players = sqlx::query_as!(PlayerModel, r#"SELECT * FROM players ORDER BY name"#)
+    let plays = sqlx::query_as!(PlayModel, r#"SELECT * FROM plays ORDER BY game_id"#)
         .fetch_all(&data.db)
         .await
         .map_err(|e| {
@@ -75,40 +58,36 @@ pub async fn player_list_handler(
 
     let json_response = serde_json::json!({
         "status": "ok",
-        "count": players.len(),
-        "players": players
+        "count": plays.len(),
+        "plays": plays
     });
 
     Ok(Json(json_response))
 }
 
-pub async fn get_player_handler(
-    Path(player_id): Path<Uuid>,
+pub async fn get_play_handler(
+    Path(play_id): Path<Uuid>,
     State(data): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let query_result = sqlx::query_as!(
-        PlayerModel,
-        r#"SELECT * FROM players WHERE id = $1"#,
-        &player_id
-    )
-    .fetch_one(&data.db)
-    .await;
+    let query_result = sqlx::query_as!(PlayModel, r#"SELECT * FROM plays WHERE id = $1"#, &play_id)
+        .fetch_one(&data.db)
+        .await;
 
     match query_result {
-        Ok(player) => {
-            let player_response = serde_json::json!({
+        Ok(play) => {
+            let play_response = serde_json::json!({
                 "status" : "success",
-                "data": serde_json::json!({
-                    "player": player
+                "data": json!({
+                    "play": play
                 })
             });
 
-            Ok(Json(player_response))
+            Ok(Json(play_response))
         }
         Err(sqlx::Error::RowNotFound) => {
-            let error_response = serde_json::json!({
+            let error_response = json!({
                 "status": "fail",
-                "message": format!("Player with ID: {} not found", player_id)
+                "message": format!("Play with ID: {} not found", play_id)
             });
             Err((StatusCode::NOT_FOUND, Json(error_response)))
         }
@@ -119,14 +98,14 @@ pub async fn get_player_handler(
     }
 }
 
-pub async fn delete_player_handler(
-    Path(player_id): Path<Uuid>,
+pub async fn delete_play_handler(
+    Path(play_id): Path<Uuid>,
     State(data): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
     let query_result = sqlx::query_as!(
-        PlayerModel,
-        r#"DELETE FROM players WHERE id = $1 RETURNING *"#,
-        &player_id
+        PlayModel,
+        r#"DELETE FROM plays WHERE id = $1 RETURNING *"#,
+        &play_id
     )
     .fetch_one(&data.db)
     .await
@@ -135,7 +114,7 @@ pub async fn delete_player_handler(
             StatusCode::NOT_FOUND,
             Json(json!({
                 "status": "error",
-                "message": "Player not found"
+                "message": "Play not found"
             })),
         ),
         _ => (
@@ -149,30 +128,30 @@ pub async fn delete_player_handler(
 
     let response = json!({
         "status": "success",
-        "message": "Player deleted successfully",
+        "message": "Play deleted successfully",
         "data": {
-            "deleted_player" : query_result
+            "deleted_play" : query_result
         }
     });
 
     Ok(Json(response))
 }
 
-pub async fn update_player_handler(
+pub async fn update_play_handler(
     Path(id): Path<Uuid>,
     State(data): State<Arc<AppState>>,
-    Json(body): Json<PlayerSchema>,
+    Json(body): Json<PlaySchema>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let query_result = sqlx::query_as!(PlayerModel, r#"SELECT * FROM players WHERE id = $1"#, &id)
+    let query_result = sqlx::query_as!(PlayModel, r#"SELECT * FROM plays WHERE id = $1"#, &id)
         .fetch_one(&data.db)
         .await;
 
-    let _player = match query_result {
-        Ok(player) => player,
+    let _play = match query_result {
+        Ok(play) => play,
         Err(sqlx::Error::RowNotFound) => {
             let error_response = serde_json::json!({
                 "status": "error",
-                "message": format!("Player with ID: {} not found", id)
+                "message": format!("Play with ID: {} not found", id)
             });
             return Err((StatusCode::NOT_FOUND, Json(error_response)));
         }
@@ -187,12 +166,12 @@ pub async fn update_player_handler(
         }
     };
 
-    let new_name = &body.name;
+    let new_game_id = &body.game_id;
 
-    let updated_player = sqlx::query_as!(
-        PlayerModel,
-        r#"UPDATE players SET name = $1 WHERE id = $2 RETURNING *"#,
-        &new_name,
+    let updated_play = sqlx::query_as!(
+        PlayModel,
+        r#"UPDATE plays SET game_id = $1 WHERE id = $2 RETURNING *"#,
+        &new_game_id,
         &id
     )
     .fetch_one(&data.db)
@@ -210,7 +189,7 @@ pub async fn update_player_handler(
     let response = json!({
         "status": "success",
         "data": json!({
-            "player": updated_player
+            "play": updated_play
         })
     });
     Ok(Json(response))

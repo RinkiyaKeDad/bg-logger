@@ -18,3 +18,11 @@ pub struct PlayerModel {
     pub is_owner: bool,
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
+
+/// Database model for a play
+#[derive(Debug, Deserialize, Serialize, sqlx::FromRow)]
+pub struct PlayModel {
+    pub id: Uuid,
+    pub game_id: Uuid,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
