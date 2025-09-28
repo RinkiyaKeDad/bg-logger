@@ -26,3 +26,10 @@ pub struct PlayModel {
     pub game_id: Uuid,
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
+
+/// Database model for a play participant
+#[derive(Debug, Deserialize, Serialize, sqlx::FromRow)]
+pub struct PlayParticipantModel {
+    pub play_id: Uuid,
+    pub player_id: Uuid,
+}

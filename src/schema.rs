@@ -25,3 +25,15 @@ pub struct PlayerSchema {
 pub struct PlaySchema {
     pub game_id: Uuid,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PlayParticipantSchema {
+    pub play_id: Uuid,
+    pub player_id: Uuid,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UpdatePlayParticipantSchema {
+    pub play_id: Option<Uuid>,
+    pub player_id: Option<Uuid>,
+}
