@@ -44,4 +44,4 @@ An app to log your board game plays.
 
 - `curlj -X PATCH -H "Content-Type: application/json" -d '{"player_id": "24944a63-dd8a-4912-b26b-04d7cee92c60"}' http://localhost:3000/api/plays/06f1c4f1-b354-41af-adc6-cd8e42c427a5/participants/f16ab1ac-76a9-423a-b553-d083d1858a8a`
 
-- `curlj -X DELETE http://localhost:3000/api/plays/06f1c4f1-b354-41af-adc6-cd8e42c427a5/participants/f16ab1ac-76a9-423a-b553-d083d1858a8a`
+- `curlj -X DELETE http://localhost:3000/api/plays/06f1c4f1-b354-41af-adc6-cd8e42c427a5/participants/24944a63-dd8a-4912-b26b-04d7cee92c60`
