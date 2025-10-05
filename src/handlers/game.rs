@@ -75,7 +75,7 @@ pub async fn game_list_handler(
     let json_response = serde_json::json!({
         "status": "ok",
         "count": games.len(),
-        "notes": games
+        "games": games
     });
 
     Ok(Json(json_response))
